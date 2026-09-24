@@ -6,11 +6,14 @@ import { SingaporeMap } from './components/SingaporeMap';
 import { ForecastList } from './components/ForecastList';
 import { AreaSelector } from './components/AreaSelector';
 import { HealthStatusModal } from './components/HealthStatusModal';
+import { ThemeToggle } from './components/ThemeToggle';
+import { ThemeProvider, useTheme } from './context/ThemeContext';
 import { RefreshCw, AlertCircle, Activity, Sparkles } from 'lucide-react';
 
 const REFRESH_INTERVAL_MS = 10 * 60 * 1000; // 10 minutes
 
-export default function App() {
+function WeatherApp() {
+  const { isDark } = useTheme();
   const [selectedLocation, setSelectedLocation] = useState<string>('Singapore');
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -113,61 +116,114 @@ export default function App() {
   const timeFormatted = `${minutesRemaining}:${secondsRemaining < 10 ? '0' : ''}${secondsRemaining}`;
 
   return (
-    <div className="min-h-screen bg-[#06131e] text-slate-100 flex flex-col justify-between selection:bg-cyan-500/30 selection:text-cyan-200">
+    <div
+      className={`min-h-screen flex flex-col justify-between transition-colors duration-200 ${
+        isDark
+          ? 'bg-[#06131e] text-slate-100 selection:bg-cyan-500/30 selection:text-cyan-200'
+          : 'bg-[#f0f7fb] text-slate-800 selection:bg-cyan-500/30 selection:text-cyan-900'
+      }`}
+    >
       {/* Top Bar Contract: 3 zones */}
-      <header className="border-b border-[#14354c] bg-[#071624]/90 backdrop-blur-md sticky top-0 z-40">
+      <header
+        className={`border-b sticky top-0 z-40 backdrop-blur-md transition-colors duration-200 ${
+          isDark
+            ? 'border-[#14354c] bg-[#071624]/90'
+            : 'border-sky-200/80 bg-white/90 shadow-xs'
+        }`}
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           {/* Zone 1: Single text element wordmark */}
           <div className="flex items-center gap-2">
-            <span className="text-lg font-bold tracking-tight text-white flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-cyan-400" />
+            <span
+              className={`text-lg font-bold tracking-tight flex items-center gap-2 ${
+                isDark ? 'text-white' : 'text-slate-900'
+              }`}
+            >
+              <Sparkles className={`w-4 h-4 ${isDark ? 'text-cyan-400' : 'text-cyan-600'}`} />
               Singapore Live Weather
             </span>
           </div>
 
           {/* Zone 2: Navigation Links */}
-          <nav className="hidden md:flex items-center gap-6 text-xs font-medium text-cyan-200/70">
+          <nav
+            className={`hidden md:flex items-center gap-6 text-xs font-medium ${
+              isDark ? 'text-cyan-200/70' : 'text-slate-500'
+            }`}
+          >
             <button
               onClick={() => setSelectedLocation('Singapore')}
-              className={`hover:text-white transition-colors ${
-                selectedLocation.toLowerCase() === 'singapore' ? 'text-cyan-400 font-semibold' : ''
+              className={`transition-colors ${
+                selectedLocation.toLowerCase() === 'singapore'
+                  ? isDark
+                    ? 'text-cyan-400 font-semibold'
+                    : 'text-cyan-600 font-semibold'
+                  : isDark
+                  ? 'hover:text-white'
+                  : 'hover:text-slate-900'
               }`}
             >
               National Overview
             </button>
-            <a href="#map" className="hover:text-white transition-colors">
+            <a
+              href="#map"
+              className={isDark ? 'hover:text-white transition-colors' : 'hover:text-slate-900 transition-colors'}
+            >
               SLA Live Map
             </a>
-            <a href="#areas" className="hover:text-white transition-colors">
+            <a
+              href="#areas"
+              className={isDark ? 'hover:text-white transition-colors' : 'hover:text-slate-900 transition-colors'}
+            >
               Area Explorer
             </a>
-            <a href="#forecasts" className="hover:text-white transition-colors">
+            <a
+              href="#forecasts"
+              className={isDark ? 'hover:text-white transition-colors' : 'hover:text-slate-900 transition-colors'}
+            >
               24-Hour Outlook
             </a>
             <button
               onClick={handleOpenHealth}
-              className="hover:text-white transition-colors flex items-center gap-1.5"
+              className={`flex items-center gap-1.5 transition-colors ${
+                isDark ? 'hover:text-white' : 'hover:text-slate-900'
+              }`}
             >
-              <Activity className="w-3.5 h-3.5 text-cyan-400" />
+              <Activity className={`w-3.5 h-3.5 ${isDark ? 'text-cyan-400' : 'text-cyan-600'}`} />
               <span>System Health</span>
             </button>
           </nav>
 
-          {/* Zone 3: Primary Actions */}
-          <div className="flex items-center gap-3">
-            <div className="hidden sm:flex items-center gap-1.5 text-xs text-cyan-200/70 font-mono">
-              <span className="w-2 h-2 rounded-full bg-teal-400 animate-pulse" />
+          {/* Zone 3: Primary Actions + Theme Toggle */}
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div
+              className={`hidden lg:flex items-center gap-1.5 text-xs font-mono ${
+                isDark ? 'text-cyan-200/70' : 'text-slate-500'
+              }`}
+            >
+              <span className={`w-2 h-2 rounded-full animate-pulse ${isDark ? 'bg-teal-400' : 'bg-teal-500'}`} />
               <span>Auto-refresh: {timeFormatted}</span>
             </div>
 
+            {/* Theme Toggle Button */}
+            <ThemeToggle />
+
+            {/* Refresh Button */}
             <button
               onClick={() => fetchWeather(selectedLocation)}
               disabled={loading}
-              className="px-3 py-1.5 text-xs font-medium text-cyan-100 bg-[#0c2436] hover:bg-[#12344d] active:bg-[#174262] rounded-lg border border-[#194362] transition-colors flex items-center gap-1.5 disabled:opacity-50"
+              className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors flex items-center gap-1.5 disabled:opacity-50 ${
+                isDark
+                  ? 'text-cyan-100 bg-[#0c2436] hover:bg-[#12344d] active:bg-[#174262] border-[#194362]'
+                  : 'text-slate-700 bg-white hover:bg-sky-50 active:bg-sky-100 border-sky-200 shadow-xs'
+              }`}
               title="Refresh weather data now"
             >
-              <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-cyan-400' : ''}`} />
-              <span>Refresh</span>
+              <RefreshCw
+                className={`w-3.5 h-3.5 ${
+                  loading ? (isDark ? 'animate-spin text-cyan-400' : 'animate-spin text-cyan-600') : ''
+                }`}
+              />
+              <span className="hidden sm:inline">Refresh</span>
             </button>
           </div>
         </div>
@@ -178,26 +234,49 @@ export default function App() {
         {/* Loading skeleton state */}
         {loading && !weather && (
           <div className="space-y-6 animate-pulse">
-            <div className="h-64 rounded-2xl bg-[#091f30] border border-[#143750]" />
+            <div
+              className={`h-64 rounded-2xl border ${
+                isDark ? 'bg-[#091f30] border-[#143750]' : 'bg-slate-200/70 border-slate-300'
+              }`}
+            />
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
               {[...Array(6)].map((_, i) => (
-                <div key={i} className="h-24 rounded-xl bg-[#091f30] border border-[#143750]" />
+                <div
+                  key={i}
+                  className={`h-24 rounded-xl border ${
+                    isDark ? 'bg-[#091f30] border-[#143750]' : 'bg-slate-200/70 border-slate-300'
+                  }`}
+                />
               ))}
             </div>
-            <div className="h-44 rounded-2xl bg-[#091f30] border border-[#143750]" />
+            <div
+              className={`h-44 rounded-2xl border ${
+                isDark ? 'bg-[#091f30] border-[#143750]' : 'bg-slate-200/70 border-slate-300'
+              }`}
+            />
           </div>
         )}
 
         {/* Error state */}
         {error && (
-          <div className="rounded-2xl bg-[#19111c]/80 border border-rose-950/80 p-6 text-center space-y-3 shadow-lg">
-            <div className="w-10 h-10 rounded-full bg-rose-950/60 border border-rose-900/60 flex items-center justify-center mx-auto text-rose-400">
+          <div
+            className={`rounded-2xl p-6 text-center space-y-3 shadow-lg border ${
+              isDark ? 'bg-[#19111c]/80 border-rose-950/80' : 'bg-rose-50/90 border-rose-200'
+            }`}
+          >
+            <div
+              className={`w-10 h-10 rounded-full flex items-center justify-center mx-auto border ${
+                isDark
+                  ? 'bg-rose-950/60 border-rose-900/60 text-rose-400'
+                  : 'bg-rose-100 border-rose-300 text-rose-600'
+              }`}
+            >
               <AlertCircle className="w-5 h-5" />
             </div>
-            <h3 className="text-base font-semibold text-slate-100">
+            <h3 className={`text-base font-semibold ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
               Weather data temporarily unavailable
             </h3>
-            <p className="text-xs text-cyan-200/70 max-w-md mx-auto">
+            <p className={`text-xs max-w-md mx-auto ${isDark ? 'text-cyan-200/70' : 'text-slate-600'}`}>
               We were unable to retrieve the latest readings from the Singapore weather service.
               Please check back shortly or verify service status.
             </p>
@@ -210,7 +289,11 @@ export default function App() {
               </button>
               <button
                 onClick={handleOpenHealth}
-                className="px-4 py-2 text-xs font-medium rounded-lg bg-[#0c2436] hover:bg-[#12344d] text-cyan-200 border border-[#194362] transition-colors"
+                className={`px-4 py-2 text-xs font-medium rounded-lg border transition-colors ${
+                  isDark
+                    ? 'bg-[#0c2436] hover:bg-[#12344d] text-cyan-200 border-[#194362]'
+                    : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200 shadow-xs'
+                }`}
               >
                 Check System Health
               </button>
@@ -259,12 +342,18 @@ export default function App() {
       </main>
 
       {/* Mandatory Footer */}
-      <footer className="border-t border-[#14354c] bg-[#06131e]/90 py-6 mt-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-xs text-cyan-300/60 space-y-2">
+      <footer
+        className={`border-t py-6 mt-12 transition-colors duration-200 ${
+          isDark
+            ? 'border-[#14354c] bg-[#06131e]/90 text-cyan-300/60'
+            : 'border-sky-200 bg-white/80 text-slate-500'
+        }`}
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-xs space-y-2">
           <p className="max-w-3xl mx-auto leading-relaxed">
             Weather information is provided for informational purposes only. This website is an independent project and is not affiliated with, endorsed by, or operated by any government agency or weather provider.
           </p>
-          <div className="text-[11px] text-cyan-400/40">
+          <div className={`text-[11px] ${isDark ? 'text-cyan-400/40' : 'text-slate-400'}`}>
             Automated refresh every 10 minutes · Last synced: {lastRefreshedAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
           </div>
         </div>
@@ -279,5 +368,13 @@ export default function App() {
         onRefresh={fetchHealth}
       />
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <ThemeProvider>
+      <WeatherApp />
+    </ThemeProvider>
   );
 }
